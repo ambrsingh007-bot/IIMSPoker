@@ -1,0 +1,165 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="theme-color" content="#0B1220" />
+  <meta name="description" content="IIMSpoker — a private poker ledger for daily results and all-time standings." />
+  <title>IIMSpoker — The Private Poker Ledger</title>
+  <link rel="icon" type="image/svg+xml" href="./public/favicon.svg" />
+  <link rel="stylesheet" href="./styles.css" />
+</head>
+<body>
+  <div id="loading" class="loading-screen">
+    <div class="loading-mark">♠ <span>IIMSpoker</span> ♣</div>
+    <div class="loading-line"><span></span></div>
+    <p>Opening the club ledger</p>
+  </div>
+
+  <div id="gate" class="gate-overlay is-hidden" role="dialog" aria-modal="true" aria-labelledby="gate-title">
+    <div class="gate-card" id="gate-card">
+      <img src="./public/iimspoker-logo.png" alt="IIMSpoker — The Private Poker Ledger" class="gate-logo" />
+      <p class="eyebrow">PRIVATE GROUP ACCESS</p>
+      <h1 id="gate-title">Welcome to the club.</h1>
+      <p class="muted">Enter your group's access code once per browser session to open the shared ledger.</p>
+      <form id="gate-form" class="gate-form">
+        <label for="club-pin">Club access code</label>
+        <input id="club-pin" type="password" autocomplete="current-password" placeholder="Enter access code" required />
+        <p id="gate-error" class="form-error" aria-live="polite"></p>
+        <button type="submit" class="button button-primary button-wide">Unlock ledger <span aria-hidden="true">↗</span></button>
+      </form>
+      <p class="gate-footnote">This code protects the shared ledger. It is not a personal account password.</p>
+    </div>
+  </div>
+
+  <main id="app" class="app-shell is-hidden">
+    <header class="topbar">
+      <a class="brand" href="#top" aria-label="IIMSpoker home">
+        <img src="./public/iimspoker-logo.png" alt="IIMSpoker — The Private Poker Ledger" class="brand-logo" />
+      </a>
+      <div class="topbar-actions">
+        <span id="mode-badge" class="mode-badge"><span class="mode-dot"></span><span id="mode-text">Shared ledger</span></span>
+        <button id="access-button" class="button button-quiet is-hidden" type="button">Lock ledger</button>
+      </div>
+    </header>
+
+    <section class="intro-section" id="top">
+      <div>
+        <p class="eyebrow"><span class="eyebrow-rule"></span> THE PRIVATE POKER LEDGER</p>
+        <h1>Every session.<br /><span>Every result.</span></h1>
+        <p class="intro-copy">One entry per player, per day. The standings take care of themselves.</p>
+      </div>
+      <div class="intro-mark" aria-hidden="true">
+        <span class="suit suit-spade">♠</span>
+        <span class="suit suit-heart">♥</span>
+        <span class="suit suit-diamond">♦</span>
+        <span class="suit suit-club">♣</span>
+      </div>
+    </section>
+
+    <div id="demo-notice" class="demo-notice is-hidden" role="status">
+      <span class="notice-icon">i</span>
+      <div><strong>Preview mode · empty ledger</strong><p>No sample results are preloaded. Entries made here stay in this browser only. Connect Supabase to share the ledger across everyone's devices.</p></div>
+      <button type="button" id="dismiss-demo-notice" aria-label="Dismiss notice">×</button>
+    </div>
+
+    <section class="stats-grid" aria-label="Club overview">
+      <article class="stat-card stat-leader">
+        <div class="stat-top"><span class="stat-label">CURRENT LEADER</span><span class="stat-symbol">↗</span></div>
+        <div id="leader-name" class="stat-value stat-name">—</div>
+        <div id="leader-total" class="stat-foot positive">₹0</div>
+      </article>
+      <article class="stat-card">
+        <div class="stat-top"><span class="stat-label">DATES RECORDED</span><span class="stat-symbol">▦</span></div>
+        <div id="dates-count" class="stat-value">0</div>
+        <div class="stat-foot">Unique playing days</div>
+      </article>
+      <article class="stat-card">
+        <div class="stat-top"><span class="stat-label">PLAYERS ON THE BOARD</span><span class="stat-symbol">♧</span></div>
+        <div id="active-count" class="stat-value">0<span class="stat-denominator"> / 7</span></div>
+        <div class="stat-foot">With at least one entry</div>
+      </article>
+    </section>
+
+    <section class="entry-section panel" aria-labelledby="entry-title">
+      <div class="section-heading">
+        <div>
+          <p class="eyebrow">01 / LOG A RESULT</p>
+          <h2 id="entry-title">Add today's result</h2>
+          <p class="section-description">Enter the player's exact name and their net result for the date.</p>
+        </div>
+        <span class="step-chip">~ 20 seconds</span>
+      </div>
+      <form id="result-form" class="result-form">
+        <div class="field field-player">
+          <label for="player-name">Player name <span class="required-mark">*</span></label>
+          <input id="player-name" name="name" list="player-list" placeholder="Type exact name…" autocomplete="off" required />
+          <datalist id="player-list">
+            <option value="Amber"></option><option value="Rishikh"></option><option value="Bhavya"></option><option value="Pratik"></option><option value="Ansh"></option><option value="Tanmay"></option><option value="Chaitanya"></option>
+          </datalist>
+          <span class="field-hint">Must match a registered name exactly.</span>
+        </div>
+        <div class="field field-date">
+          <label for="result-date">Playing date <span class="required-mark">*</span></label>
+          <input id="result-date" name="date" type="date" required />
+          <span class="field-hint">One result per player per date.</span>
+        </div>
+        <div class="field field-amount">
+          <label for="result-amount">Net result (₹) <span class="required-mark">*</span></label>
+          <div class="amount-wrap"><span>₹</span><input id="result-amount" name="amount" type="number" step="0.01" placeholder="350 or -200" required /></div>
+          <span class="field-hint"><span class="profit-hint">+ profit</span> <span class="hint-separator">/</span> <span class="loss-hint">− loss</span></span>
+        </div>
+        <div class="field-submit">
+          <button type="submit" class="button button-primary button-submit" id="submit-result">Save result <span aria-hidden="true">↗</span></button>
+        </div>
+      </form>
+      <div id="form-message" class="form-message is-hidden" role="status" aria-live="polite"></div>
+      <div class="form-bottom"><span class="lock-glyph">◇</span> A repeated player + date entry updates the previous amount instead of double-counting.</div>
+    </section>
+
+    <section class="scorecard-section" aria-labelledby="scorecard-title">
+      <div class="section-heading section-heading-scorecard">
+        <div>
+          <p class="eyebrow">02 / LIVE STANDINGS</p>
+          <h2 id="scorecard-title">All-time scorecard</h2>
+          <p class="section-description">Rankings move with cumulative profit/loss. Session columns stay chronological.</p>
+        </div>
+        <div class="scorecard-key"><span><i class="key-positive"></i> Profit</span><span><i class="key-negative"></i> Loss</span></div>
+      </div>
+      <div class="table-frame">
+        <div id="table-scroller" class="table-scroller">
+          <table id="scorecard" class="scorecard-table">
+            <thead id="scorecard-head"></thead>
+            <tbody id="scorecard-body"></tbody>
+          </table>
+        </div>
+        <div id="empty-scorecard" class="empty-state is-hidden">
+          <div class="empty-icon">♠</div><h3>Clean slate.</h3><p>All seven players start at ₹0. Save the first daily result to begin the live standings.</p>
+        </div>
+      </div>
+      <div class="table-footer"><span id="scorecard-summary">7 players · 0 daily entries</span><span>Amounts in INR <span class="footer-dot">·</span> Live cumulative totals</span></div>
+    </section>
+
+    <section class="activity-section panel" aria-labelledby="activity-title">
+      <div class="section-heading">
+        <div><p class="eyebrow">03 / RECENT ACTIVITY</p><h2 id="activity-title">All entries</h2><p class="section-description">Review all recorded results. Only the browser that originally created an entry can delete it.</p></div>
+        <span id="activity-count" class="step-chip">0 entries</span>
+      </div>
+      <div class="activity-table-wrap">
+        <table class="activity-table">
+          <thead><tr><th>Player</th><th>Date</th><th class="align-right">Net result</th><th>Status</th><th>Action</th></tr></thead>
+          <tbody id="activity-body"></tbody>
+        </table>
+        <div id="empty-activity" class="activity-empty is-hidden">No results recorded yet.</div>
+      </div>
+    </section>
+
+    <footer class="footer">
+      <div class="footer-brand"><span class="footer-suits">♠ ♥ ♦ ♣</span><span>IIMSpoker</span></div>
+      <p>Built for the table. Kept for the record.</p>
+      <span class="footer-version">PRIVATE GROUP LEDGER</span>
+    </footer>
+  </main>
+  <script src="/app.js" defer></script>
+</body>
+</html>
